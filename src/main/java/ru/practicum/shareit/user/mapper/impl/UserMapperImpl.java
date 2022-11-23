@@ -12,7 +12,7 @@ public class UserMapperImpl implements UserMapper {
 
     @Override
     public User toUser(UserRequestDto dto) {
-        if ( dto == null ) {
+        if (dto == null) {
             return null;
         }
 
@@ -26,7 +26,7 @@ public class UserMapperImpl implements UserMapper {
 
     @Override
     public User toUser(UserPatchDto dto) {
-        if ( dto == null ) {
+        if (dto == null) {
             return null;
         }
 
@@ -40,7 +40,7 @@ public class UserMapperImpl implements UserMapper {
 
     @Override
     public UserResponseDto toUserDto(User user) {
-        if ( user == null ) {
+        if (user == null) {
             return null;
         }
 

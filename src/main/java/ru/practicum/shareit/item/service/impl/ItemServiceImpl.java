@@ -35,7 +35,7 @@ public class ItemServiceImpl implements ItemService {
 
     public List<Item> getByText(String text) {
         log.info("items search request by text = {}.", text);
-        if ( text.isEmpty() ) {
+        if (text.isEmpty()) {
             return new ArrayList<>();
         }
         return itemRepository.readByText(text.toLowerCase());
@@ -55,16 +55,16 @@ public class ItemServiceImpl implements ItemService {
         log.info("request to change a item with id = {} to {}.", itemId, item);
         existUserById(userId);
         Item dbItem = getById(itemId);
-        if ( !dbItem.getOwner().getId().equals(userId) ) {
+        if (!dbItem.getOwner().getId().equals(userId)) {
             throw new NotUserInstanceException(String.format("user with id = %d does not own item with id = %d.", userId, itemId));
         }
-        if ( item.getName() != null ) {
+        if (item.getName() != null) {
             dbItem.setName(item.getName());
         }
-        if ( item.getDescription() != null ) {
+        if (item.getDescription() != null) {
             dbItem.setDescription(item.getDescription());
         }
-        if ( item.getAvailable() != null ) {
+        if (item.getAvailable() != null) {
             dbItem.setAvailable(item.getAvailable());
         }
         Item changedItem = itemRepository.update(dbItem);
@@ -73,7 +73,7 @@ public class ItemServiceImpl implements ItemService {
     }
 
     private void existUserById(Long userId) {
-        if ( !userRepository.existsById(userId) ) {
+        if (!userRepository.existsById(userId)) {
             throw new NotFoundException(String.format("user with id = %d not found.", userId));
         }
     }

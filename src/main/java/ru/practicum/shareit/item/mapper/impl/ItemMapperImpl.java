@@ -12,7 +12,7 @@ public class ItemMapperImpl implements ItemMapper {
 
     @Override
     public Item toItem(ItemRequestDto dto) {
-        if ( dto == null ) {
+        if (dto == null) {
             return null;
         }
 
@@ -27,7 +27,7 @@ public class ItemMapperImpl implements ItemMapper {
 
     @Override
     public Item toItem(ItemPatchDto dto) {
-        if ( dto == null ) {
+        if (dto == null) {
             return null;
         }
 
@@ -42,7 +42,7 @@ public class ItemMapperImpl implements ItemMapper {
 
     @Override
     public ItemResponseDto toItemDto(Item item) {
-        if ( item == null ) {
+        if (item == null) {
             return null;
         }
 

@@ -39,11 +39,11 @@ public class UserServiceImpl implements UserService {
     public User change(Long userId, User user) {
         User dbUser = getById(userId);
         log.info("request to change a user with id = {} to {}.", userId, user);
-        if ( user.getEmail() != null ) {
+        if (user.getEmail() != null) {
             existsByEmail(user);
             dbUser.setEmail(user.getEmail());
         }
-        if ( user.getName() != null ) {
+        if (user.getName() != null) {
             dbUser.setName(user.getName());
         }
         User changedUser = userRepository.update(dbUser);
@@ -53,7 +53,7 @@ public class UserServiceImpl implements UserService {
 
     public void delete(Long userId) {
         log.info("request to delete a user with id = {}.", userId);
-        if ( !userRepository.existsById(userId) ) {
+        if (!userRepository.existsById(userId)) {
             throw new NotFoundException(String.format("user with id = %d not found.", userId));
         }
         userRepository.delete(userId);
@@ -61,7 +61,7 @@ public class UserServiceImpl implements UserService {
     }
 
     private void existsByEmail(User user) {
-        if ( userRepository.existsByEmail(user) ) {
+        if (userRepository.existsByEmail(user)) {
             throw new DuplicateEmailException(String.format("user with email = %s already exist.", user.getEmail()));
         }
     }

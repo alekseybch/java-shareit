@@ -35,7 +35,7 @@ public class ErrorHandler extends ResponseEntityExceptionHandler {
 
     @ExceptionHandler({NotFoundException.class, NotUserInstanceException.class})
     @ResponseStatus(HttpStatus.NOT_FOUND)
-    protected Map<String, Object> handleNotFound (RuntimeException ex, WebRequest request) {
+    protected Map<String, Object> handleNotFound(RuntimeException ex, WebRequest request) {
         log.error("Error: {}", ex.getMessage(), ex);
         Map<String, Object> responseBody = getGeneralErrorBody(HttpStatus.NOT_FOUND, request);
         responseBody.put(REASONS, ex.getMessage());
@@ -44,7 +44,7 @@ public class ErrorHandler extends ResponseEntityExceptionHandler {
 
     @ExceptionHandler(DuplicateEmailException.class)
     @ResponseStatus(HttpStatus.CONFLICT)
-    protected Map<String, Object> handleEmailExists (DuplicateEmailException ex, WebRequest request) {
+    protected Map<String, Object> handleEmailExists(DuplicateEmailException ex, WebRequest request) {
         log.error("Email already exist: {}", ex.getMessage(), ex);
         Map<String, Object> responseBody = getGeneralErrorBody(HttpStatus.CONFLICT, request);
         responseBody.put(REASONS, ex.getMessage());
