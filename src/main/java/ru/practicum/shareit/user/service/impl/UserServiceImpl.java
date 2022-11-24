@@ -7,38 +7,50 @@ import ru.practicum.shareit.exception.DuplicateEmailException;
 import ru.practicum.shareit.exception.NotFoundException;
 import ru.practicum.shareit.user.db.model.User;
 import ru.practicum.shareit.user.db.repository.UserRepository;
+import ru.practicum.shareit.user.dto.UserPatchDto;
+import ru.practicum.shareit.user.dto.UserRequestDto;
+import ru.practicum.shareit.user.dto.UserResponseDto;
+import ru.practicum.shareit.user.mapper.UserMapper;
 import ru.practicum.shareit.user.service.UserService;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @Slf4j
 @RequiredArgsConstructor
 public class UserServiceImpl implements UserService {
     private final UserRepository userRepository;
+    private final UserMapper userMapper;
 
-    public List<User> getUsers() {
+    public List<UserResponseDto> getUsers() {
         log.info("request to get all users.");
-        return userRepository.readAll();
+        return userRepository.readAll().stream()
+                .map(userMapper::toUserDto)
+                .collect(Collectors.toList());
     }
 
-    public User getById(Long userId) {
+    public UserResponseDto getById(Long userId) {
         log.info("request to get a user with id = {}.", userId);
-        return userRepository.readById(userId)
+        User user = userRepository.readById(userId)
                 .orElseThrow(() -> new NotFoundException(String.format("user with id = %d not found.", userId)));
+        return userMapper.toUserDto(user);
     }
 
-    public User save(User user) {
-        log.info("request to save a user {}.", user);
+    public UserResponseDto save(UserRequestDto userDto) {
+        log.info("request to save a user {}.", userDto);
+        User user = userMapper.toUser(userDto);
         existsByEmail(user);
         User savedUser = userRepository.save(user);
         log.info("user with id = {} is saved {}.", savedUser.getId(), savedUser);
-        return savedUser;
+        return userMapper.toUserDto(savedUser);
     }
 
-    public User change(Long userId, User user) {
-        User dbUser = getById(userId);
-        log.info("request to change a user with id = {} to {}.", userId, user);
+    public UserResponseDto change(Long userId, UserPatchDto userDto) {
+        log.info("request to change a user with id = {} to {}.", userId, userDto);
+        User dbUser = userRepository.readById(userId)
+                .orElseThrow(() -> new NotFoundException(String.format("user with id = %d not found.", userId)));
+        User user = userMapper.toUser(userDto);
         if (user.getEmail() != null) {
             existsByEmail(user);
             dbUser.setEmail(user.getEmail());
@@ -48,7 +60,7 @@ public class UserServiceImpl implements UserService {
         }
         User changedUser = userRepository.update(dbUser);
         log.info("user with id = {} is changed {}.", changedUser.getId(), changedUser);
-        return changedUser;
+        return userMapper.toUserDto(changedUser);
     }
 
     public void delete(Long userId) {

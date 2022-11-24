@@ -30,7 +30,7 @@ public class InMemoryItemRepositoryImpl implements ItemRepository {
     public List<Item> readByText(String text) {
         return itemStorage.values().stream()
                 .filter(p -> p.getName().toLowerCase().contains(text) || p.getDescription().toLowerCase().contains(text))
-                .filter(p -> p.getAvailable().equals(true))
+                .filter(Item::getAvailable)
                 .collect(Collectors.toList());
     }
 

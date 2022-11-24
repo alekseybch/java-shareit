@@ -18,4 +18,5 @@ public class ItemRequestDto {
     private String description;
     @NotNull(message = "can't be null.")
     private Boolean available;
+    private Long ownerId;
 }
