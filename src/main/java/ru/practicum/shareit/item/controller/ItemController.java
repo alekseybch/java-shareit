@@ -4,9 +4,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
-import ru.practicum.shareit.item.dto.ItemPatchDto;
-import ru.practicum.shareit.item.dto.ItemRequestDto;
-import ru.practicum.shareit.item.dto.ItemResponseDto;
+import ru.practicum.shareit.item.dto.*;
 import ru.practicum.shareit.item.service.ItemService;
 
 import javax.validation.Valid;
@@ -25,12 +23,13 @@ public class ItemController {
     }
 
     @GetMapping(value = "/{itemId}")
-    public ItemResponseDto findItemById(@PathVariable Long itemId) {
-        return itemService.getById(itemId);
+    public ItemResponseDto findItemById(@RequestHeader("X-Sharer-User-Id") Long userId,
+                                        @PathVariable Long itemId) {
+        return itemService.getById(itemId, userId);
     }
 
     @GetMapping(value = "/search")
-    public List<ItemResponseDto> findItemByText(@RequestParam String text) {
+    public List<ItemResponseDto> findItemByText(@RequestParam("text") String text) {
         return itemService.getByText(text);
     }
 
@@ -40,6 +39,15 @@ public class ItemController {
                                     @RequestBody @Valid @NotNull ItemRequestDto itemDto) {
         itemDto.setOwnerId(userId);
         return itemService.save(itemDto);
+    }
+
+    @PostMapping(value = "/{itemId}/comment", consumes = MediaType.APPLICATION_JSON_VALUE)
+    public CommentResponseDto createComment(@RequestHeader("X-Sharer-User-Id") Long userId,
+                                            @PathVariable Long itemId,
+                                            @RequestBody @Valid @NotNull CommentRequestDto commentDto) {
+        commentDto.setAuthorId(userId);
+        commentDto.setItemId(itemId);
+        return itemService.saveComment(commentDto);
     }
 
     @PatchMapping(value = "/{id}", consumes = MediaType.APPLICATION_JSON_VALUE)
