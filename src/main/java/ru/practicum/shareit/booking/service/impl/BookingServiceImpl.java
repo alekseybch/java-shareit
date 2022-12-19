@@ -130,6 +130,10 @@ public class BookingServiceImpl implements BookingService {
             throw new NotItemAvailableException(String.format("item with id = %d is not available for booking.",
                     booking.getItem().getId()));
         }
+        if (bookingRepository.findFreeInterval(booking.getItem().getId(), booking.getStart(), booking.getEnd())
+                != null) {
+            throw new NotItemAvailableException("item cannot be booked for these dates.");
+        }
         if (booking.getItem().getOwner().getId().equals(booking.getBooker().getId())) {
             throw new NotItemOwnerException(String.format("user with id = %d cannot book their item.",
                     booking.getBooker().getId()));
@@ -149,8 +153,9 @@ public class BookingServiceImpl implements BookingService {
             throw new NotItemOwnerException(String.format("user with id = %d does not own booking with id = %d.",
                     userId, booking.getId()));
         }
-        if (isApproved.toString().equals(booking.getStatus().getLabel())) {
-            throw new BadApproveStatusException(String.format("booking status is already %s", isApproved));
+        if (booking.getStatus().equals(BookingStatus.APPROVED) ||
+                booking.getStatus().equals(BookingStatus.REJECTED)) {
+            throw new BadApproveStatusException("booking status has already been confirmed");
         }
         if (isApproved) {
             booking.setStatus(BookingStatus.APPROVED);

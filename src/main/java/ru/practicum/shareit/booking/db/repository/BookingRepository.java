@@ -59,19 +59,26 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
 
     @Query("select b from Booking b " +
             "where b.item.id = :itemId " +
-            "and (b.end = (select max(bk.end) from Booking bk where bk.item.id = :itemId and bk.end < :time) " +
+            "and (b.start = (select max(bk.start) from Booking bk where bk.item.id = :itemId and bk.start < :time) " +
             "or b.start = (select min(bk.start) from Booking bk where bk.item.id = :itemId and bk.start > :time))")
     List<Booking> findLastAndNextById(Long itemId, LocalDateTime time);
 
     @Query("select b from Booking b " +
             "where b.item.id in (:itemIds) " +
-            "and (b.end = (select max(bk.end) from Booking bk where bk.item.id in (:itemIds) and bk.end < :time) " +
+            "and (b.start = (select max(bk.start) from Booking bk where bk.item.id in (:itemIds) and bk.start < :time) " +
             "or b.start = (select min(bk.start) from Booking bk where bk.item.id in (:itemIds) and bk.start > :time))")
     List<Booking> findLastAndNextByIdList(List<Long> itemIds, LocalDateTime time);
 
     @Query("select b from Booking b " +
             "where b.item.id = :itemId " +
+            "and :time_start <= (select max(bk.end) from Booking bk where bk.item.id = :itemId and bk.end < :time_end) " +
+            "and :time_end >= (select min(bk.start) from Booking bk where bk.item.id = :itemId and bk.start > :time_start)")
+    Booking findFreeInterval(Long itemId, LocalDateTime time_start, LocalDateTime time_end);
+
+    @Query("select b from Booking b " +
+            "where b.item.id = :itemId " +
             "and b.booker.id = :userId " +
-            "and b.end < :time")
-    Booking findByItemIdAndBookerId(Long itemId, Long userId, LocalDateTime time);
+            "and b.end < :time " +
+            "and b.status = 'APPROVED'")
+    Booking findByItemIdAndBookerIdAndStatusApproved(Long itemId, Long userId, LocalDateTime time);
 }

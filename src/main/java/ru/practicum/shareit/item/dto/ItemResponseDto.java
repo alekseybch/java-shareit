@@ -7,7 +7,6 @@ import ru.practicum.shareit.user.dto.UserResponseDto;
 
 import java.util.List;
 
-
 @Getter
 @Setter
 public class ItemResponseDto {

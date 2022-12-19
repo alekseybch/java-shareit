@@ -122,7 +122,7 @@ public class ItemServiceImpl implements ItemService {
             throw new NotFoundException(String.format("item with id = %d not found.", commentDto.getItemId()));
         }
         LocalDateTime time = LocalDateTime.now();
-        if ((bookingRepository.findByItemIdAndBookerId(commentDto.getItemId(),
+        if ((bookingRepository.findByItemIdAndBookerIdAndStatusApproved(commentDto.getItemId(),
                 commentDto.getAuthorId(), time)) == null) {
             throw new NotItemBookedException(String.format("user with id = %d does booked item with id = %d",
                     commentDto.getAuthorId(), commentDto.getItemId()));
