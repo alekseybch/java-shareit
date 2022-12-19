@@ -71,9 +71,9 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
 
     @Query("select b from Booking b " +
             "where b.item.id = :itemId " +
-            "and :time_start <= (select max(bk.end) from Booking bk where bk.item.id = :itemId and bk.end < :time_end) " +
-            "and :time_end >= (select min(bk.start) from Booking bk where bk.item.id = :itemId and bk.start > :time_start)")
-    Booking findFreeInterval(Long itemId, LocalDateTime time_start, LocalDateTime time_end);
+            "and :timeStart <= (select max(bk.end) from Booking bk where bk.item.id = :itemId and bk.end < :timeEnd) " +
+            "and :timeEnd >= (select min(bk.start) from Booking bk where bk.item.id = :itemId and bk.start > :timeStart)")
+    Booking findFreeInterval(Long itemId, LocalDateTime timeStart, LocalDateTime timeEnd);
 
     @Query("select b from Booking b " +
             "where b.item.id = :itemId " +
