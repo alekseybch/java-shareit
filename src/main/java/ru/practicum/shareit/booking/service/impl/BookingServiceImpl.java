@@ -130,8 +130,8 @@ public class BookingServiceImpl implements BookingService {
             throw new NotItemAvailableException(String.format("item with id = %d is not available for booking.",
                     booking.getItem().getId()));
         }
-        if (bookingRepository.findFreeInterval(booking.getItem().getId(), booking.getStart(), booking.getEnd())
-                != null) {
+        if (!bookingRepository.findFreeInterval(booking.getItem().getId(), booking.getStart(), booking.getEnd())
+                .isEmpty()) {
             throw new NotItemAvailableException("item cannot be booked for these dates.");
         }
         if (booking.getItem().getOwner().getId().equals(booking.getBooker().getId())) {
