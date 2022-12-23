@@ -1,4 +1,4 @@
-package ru.practicum.shareit.handler;
+package ru.practicum.shareit.global.handler;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpHeaders;
@@ -13,10 +13,9 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.context.request.ServletWebRequest;
 import org.springframework.web.context.request.WebRequest;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
-import ru.practicum.shareit.exception.DuplicateEmailException;
-import ru.practicum.shareit.exception.NotFoundException;
-import ru.practicum.shareit.exception.NotUserInstanceException;
+import ru.practicum.shareit.global.exception.*;
 
+import javax.persistence.EntityNotFoundException;
 import javax.servlet.http.HttpServletRequest;
 import java.time.OffsetDateTime;
 import java.util.LinkedHashMap;
@@ -31,23 +30,23 @@ public class ErrorHandler extends ResponseEntityExceptionHandler {
     private static final String STATUS = "status";
     private static final String ERROR = "error";
     private static final String PATH = "path";
-    private static final String REASONS = "reasons";
 
-    @ExceptionHandler({NotFoundException.class, NotUserInstanceException.class})
+    @ExceptionHandler({NotFoundException.class, NotItemOwnerException.class, EntityNotFoundException.class})
     @ResponseStatus(HttpStatus.NOT_FOUND)
     protected Map<String, Object> handleNotFound(RuntimeException ex, WebRequest request) {
         log.error("Error: {}", ex.getMessage(), ex);
         Map<String, Object> responseBody = getGeneralErrorBody(HttpStatus.NOT_FOUND, request);
-        responseBody.put(REASONS, ex.getMessage());
+        responseBody.put(ERROR, ex.getMessage());
         return responseBody;
     }
 
-    @ExceptionHandler(DuplicateEmailException.class)
-    @ResponseStatus(HttpStatus.CONFLICT)
-    protected Map<String, Object> handleEmailExists(DuplicateEmailException ex, WebRequest request) {
-        log.error("Email already exist: {}", ex.getMessage(), ex);
-        Map<String, Object> responseBody = getGeneralErrorBody(HttpStatus.CONFLICT, request);
-        responseBody.put(REASONS, ex.getMessage());
+    @ExceptionHandler({NotItemAvailableException.class, BadBookingDateException.class,
+            BadApproveStatusException.class, BadStateException.class, NotItemBookedException.class})
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    protected Map<String, Object> handleBadRequest(RuntimeException ex, WebRequest request) {
+        log.error("Error: {}", ex.getMessage(), ex);
+        Map<String, Object> responseBody = getGeneralErrorBody(HttpStatus.BAD_REQUEST, request);
+        responseBody.put(ERROR, ex.getMessage());
         return responseBody;
     }
 
@@ -56,7 +55,7 @@ public class ErrorHandler extends ResponseEntityExceptionHandler {
     protected Map<String, Object> handleAllException(final Exception ex, WebRequest request) {
         log.error("Error: {}", ex.getMessage(), ex);
         Map<String, Object> responseBody = getGeneralErrorBody(HttpStatus.INTERNAL_SERVER_ERROR, request);
-        responseBody.put(REASONS, ex.getMessage());
+        responseBody.put(ERROR, ex.getMessage());
         return responseBody;
     }
 
@@ -71,7 +70,7 @@ public class ErrorHandler extends ResponseEntityExceptionHandler {
                 .getAllErrors()
                 .stream()
                 .map(this::getErrorString).collect(Collectors.toList());
-        body.put(REASONS, errors);
+        body.put(ERROR, errors);
         return new ResponseEntity<>(body, headers, status);
     }
 
@@ -80,7 +79,6 @@ public class ErrorHandler extends ResponseEntityExceptionHandler {
         Map<String, Object> body = new LinkedHashMap<>();
         body.put(TIMESTAMP, OffsetDateTime.now());
         body.put(STATUS, status.value());
-        body.put(ERROR, status.getReasonPhrase());
         body.put(PATH, getRequestURI(request));
         return body;
     }

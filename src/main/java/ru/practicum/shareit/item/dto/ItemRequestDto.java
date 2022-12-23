@@ -2,6 +2,7 @@ package ru.practicum.shareit.item.dto;
 
 import lombok.Getter;
 import lombok.Setter;
+import lombok.ToString;
 
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
@@ -9,6 +10,7 @@ import javax.validation.constraints.Size;
 
 @Getter
 @Setter
+@ToString
 public class ItemRequestDto {
     @NotBlank(message = "can't be null or blank.")
     @Size(max = 150, message = "must not be more than 150 characters.")
