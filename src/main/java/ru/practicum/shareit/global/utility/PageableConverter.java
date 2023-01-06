@@ -5,7 +5,7 @@ import org.springframework.data.domain.Sort;
 import ru.practicum.shareit.global.exception.BadPageRequestException;
 
 public class PageableConverter {
-    private PageableConverter(){
+    private PageableConverter() {
     }
 
     public static PageRequest getPageable(Integer from, Integer size, Sort.Direction direction, String properties) {
