@@ -5,7 +5,6 @@ import lombok.Setter;
 
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.Size;
-import java.time.LocalDateTime;
 
 @Getter
 @Setter
@@ -15,5 +14,4 @@ public class CommentRequestDto {
     private String text;
     private Long itemId;
     private Long authorId;
-    private LocalDateTime created;
 }

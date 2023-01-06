@@ -20,7 +20,7 @@ public class UserController {
     private final UserService userService;
 
     @GetMapping
-    public List<UserResponseDto> getUsers() {
+    public List<UserResponseDto> findUsers() {
         return userService.getUsers();
     }
 

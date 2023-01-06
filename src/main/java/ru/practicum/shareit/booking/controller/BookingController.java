@@ -27,15 +27,23 @@ public class BookingController {
     @GetMapping
     public List<BookingResponseDto> findBookingByState(@RequestHeader("X-Sharer-User-Id") Long userId,
                                                        @RequestParam(value = "state", required = false,
-                                                               defaultValue = "ALL") String state) {
-        return bookingService.getAllByState(userId, state);
+                                                               defaultValue = "ALL") String state,
+                                                       @RequestParam(value = "from", required = false,
+                                                               defaultValue = "0") Integer from,
+                                                       @RequestParam(value = "size", required = false,
+                                                               defaultValue = "20") Integer size) {
+        return bookingService.getAllByState(userId, state, from, size);
     }
 
     @GetMapping(value = "/owner")
     public List<BookingResponseDto> findBookingByStateForOwner(@RequestHeader("X-Sharer-User-Id") Long userId,
                                                                @RequestParam(value = "state", required = false,
-                                                                       defaultValue = "ALL") String state) {
-        return bookingService.getAllByOwner(userId, state);
+                                                                       defaultValue = "ALL") String state,
+                                                               @RequestParam(value = "from", required = false,
+                                                                       defaultValue = "0") Integer from,
+                                                               @RequestParam(value = "size", required = false,
+                                                                       defaultValue = "20") Integer size) {
+        return bookingService.getAllByOwner(userId, state, from, size);
     }
 
     @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)

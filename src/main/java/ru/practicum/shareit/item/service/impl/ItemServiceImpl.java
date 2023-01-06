@@ -2,6 +2,7 @@ package ru.practicum.shareit.item.service.impl;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
@@ -11,6 +12,7 @@ import ru.practicum.shareit.booking.mapper.BookingMapper;
 import ru.practicum.shareit.global.exception.NotFoundException;
 import ru.practicum.shareit.global.exception.NotItemBookedException;
 import ru.practicum.shareit.global.exception.NotItemOwnerException;
+import ru.practicum.shareit.global.utility.PageableConverter;
 import ru.practicum.shareit.item.db.model.Comment;
 import ru.practicum.shareit.item.db.model.Item;
 import ru.practicum.shareit.item.db.repository.CommentRepository;
@@ -23,6 +25,8 @@ import ru.practicum.shareit.item.service.ItemService;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
+
+import static ru.practicum.shareit.global.utility.PageableConverter.getPageable;
 
 @Service
 @Slf4j
@@ -37,9 +41,10 @@ public class ItemServiceImpl implements ItemService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<ItemResponseDto> getItems(Long userId) {
+    public List<ItemResponseDto> getItems(Long userId, Integer from, Integer size) {
         log.info("request to get all user items with id = {}.", userId);
-        List<ItemResponseDto> itemsDto = itemRepository.getItemsByOwnerId(userId).stream()
+        List<ItemResponseDto> itemsDto = itemRepository.getItemsByOwnerId(userId,
+                        getPageable(from, size, Sort.Direction.ASC, "id")).stream()
                 .map(itemMapper::toItemDto)
                 .collect(Collectors.toList());
         List<Long> itemIds = itemsDto.stream()
@@ -64,14 +69,21 @@ public class ItemServiceImpl implements ItemService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<ItemResponseDto> getByText(String text) {
+    public List<ItemResponseDto> getByText(String text, Integer from, Integer size) {
         log.info("items search request by text = {}.", text);
         if (text.isEmpty()) {
             return new ArrayList<>();
         }
-        return itemRepository.getByText(text.toLowerCase()).stream()
+        List<ItemResponseDto> itemsDto = itemRepository.getByText(text.toLowerCase(),
+                        PageableConverter.getPageable(from, size, Sort.Direction.ASC, "id")).stream()
                 .map(itemMapper::toItemDto)
                 .collect(Collectors.toList());
+        List<Long> itemIds = itemsDto.stream()
+                .map(ItemResponseDto::getId)
+                .collect(Collectors.toList());
+        getBookingsList(itemsDto, itemIds);
+        getCommentsList(itemsDto, itemIds);
+        return itemsDto;
     }
 
     @Override
@@ -104,9 +116,11 @@ public class ItemServiceImpl implements ItemService {
         if (itemDto.getAvailable() != null) {
             dbItem.setAvailable(itemDto.getAvailable());
         }
-        Item changedItem = itemRepository.save(dbItem);
+        ItemResponseDto changedItem = itemMapper.toItemDto(itemRepository.save(dbItem));
+        getBookings(changedItem);
+        getComments(changedItem);
         log.info("item with id = {} is changed {}.", changedItem.getId(), changedItem);
-        return itemMapper.toItemDto(changedItem);
+        return changedItem;
     }
 
     @Override
@@ -168,7 +182,7 @@ public class ItemServiceImpl implements ItemService {
     }
 
     private void getCommentsList(List<ItemResponseDto> itemDtoList, List<Long> itemIds) {
-        List<Comment> comments = commentRepository.findCommentsByItemId(itemIds);
+        List<Comment> comments = commentRepository.findCommentsByItemIds(itemIds);
         itemDtoList.forEach(itemDto -> {
                     List<CommentResponseDto> commentsDto = new ArrayList<>();
                     comments.forEach(comment -> {
