@@ -19,12 +19,12 @@ import java.util.stream.Collectors;
 @Service
 @Slf4j
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 public class UserServiceImpl implements UserService {
     private final UserRepository userRepository;
     private final UserMapper userMapper;
 
     @Override
-    @Transactional(readOnly = true)
     public List<UserResponseDto> getUsers() {
         log.info("request to get all users.");
         return userRepository.findAll().stream()
@@ -33,7 +33,6 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    @Transactional(readOnly = true)
     public UserResponseDto getById(Long userId) {
         log.info("request to get a user with id = {}.", userId);
         return userMapper.toUserDto(userRepository.getReferenceById(userId));

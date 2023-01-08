@@ -9,7 +9,7 @@ public class PageableConverter {
     }
 
     public static PageRequest getPageable(Integer from, Integer size, Sort.Direction direction, String properties) {
-        if (from < 0 || size < 0) {
+        if (from < 0 || size <= 0) {
             throw new BadPageRequestException(String.format("Bad pageable request from = %d, size = %d", from, size));
         }
         return PageRequest.of((from / size), size, direction, properties);

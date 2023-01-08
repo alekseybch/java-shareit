@@ -27,13 +27,13 @@ import static ru.practicum.shareit.global.utility.PageableConverter.getPageable;
 @Service
 @Slf4j
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 public class BookingServiceImpl implements BookingService {
     private final BookingRepository bookingRepository;
     private final UserService userService;
     private final BookingMapper bookingMapper;
 
     @Override
-    @Transactional(readOnly = true)
     public BookingResponseDto getById(Long userId, Long bookingId) {
         log.info("request to get a booking with id = {}.", bookingId);
         Booking booking = bookingRepository.getReferenceById(bookingId);
@@ -45,7 +45,6 @@ public class BookingServiceImpl implements BookingService {
     }
 
     @Override
-    @Transactional(readOnly = true)
     public List<BookingResponseDto> getAllByState(Long userId, String state, Integer from, Integer size) {
         log.info("request to get all bookings by state = {}.", state);
         userService.getById(userId);
@@ -80,7 +79,6 @@ public class BookingServiceImpl implements BookingService {
     }
 
     @Override
-    @Transactional(readOnly = true)
     public List<BookingResponseDto> getAllByOwner(Long userId, String state, Integer from, Integer size) {
         log.info("request to receive all bookings by state = {} from item owner = {}.", state, userId);
         userService.getById(userId);

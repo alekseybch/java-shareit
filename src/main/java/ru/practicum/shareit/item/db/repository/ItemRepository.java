@@ -8,6 +8,7 @@ import ru.practicum.shareit.global.mapper.EntityMapper;
 import ru.practicum.shareit.item.db.model.Item;
 
 import java.util.List;
+import java.util.Set;
 
 public interface ItemRepository extends JpaRepository<Item, Long> {
     List<Item> getItemsByOwnerId(Long userId, Pageable pageable);
@@ -21,7 +22,7 @@ public interface ItemRepository extends JpaRepository<Item, Long> {
 
     @Query("select i from Item i " +
             "where i.request.id in (:itemReqIds)")
-    List<Item> findItemsByRequestId(List<Long> itemReqIds);
+    List<Item> findItemsByRequestId(Set<Long> itemReqIds);
 
     List<Item> getItemsByRequestId(Long requestId);
 

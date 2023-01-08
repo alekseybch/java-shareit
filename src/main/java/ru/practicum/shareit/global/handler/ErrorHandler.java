@@ -40,7 +40,7 @@ public class ErrorHandler extends ResponseEntityExceptionHandler {
         return responseBody;
     }
 
-    @ExceptionHandler({NotItemAvailableException.class, BadBookingDateException.class,
+    @ExceptionHandler({NotItemAvailableException.class, BadBookingDateException.class, BadPageRequestException.class,
             BadApproveStatusException.class, BadStateException.class, NotItemBookedException.class})
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     protected Map<String, Object> handleBadRequest(RuntimeException ex, WebRequest request) {

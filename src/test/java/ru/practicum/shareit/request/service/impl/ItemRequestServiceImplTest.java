@@ -100,7 +100,6 @@ class ItemRequestServiceImplTest {
         itemReqResponseDto.setId(1L);
         itemReqResponseDto.setDescription("need drill");
         itemReqResponseDto.setCreated(itemRequest1.getCreated());
-        itemReqResponseDto.setItems(List.of(itemForRequestResponseDto));
     }
 
     @Test
@@ -114,7 +113,7 @@ class ItemRequestServiceImplTest {
         when(itemRequestRepository.getItemRequestsByRequestorId(anyLong(), any()))
                 .thenReturn(pageItemRequests);
         when(itemRequestMapper.toItemReqDto(any())).thenReturn(itemReqResponseDto);
-        when(itemRepository.findItemsByRequestId(anyList())).thenReturn(List.of(item1));
+        when(itemRepository.findItemsByRequestId(anySet())).thenReturn(List.of(item1));
         when(itemMapper.toItemForRequestDto(any())).thenReturn(itemForRequestResponseDto);
 
         List<ItemReqResponseDto> actualItemRequests = itemRequestService.getItemRequests(requestorId, 0, 10);
@@ -122,7 +121,7 @@ class ItemRequestServiceImplTest {
         verify(userService, times(1)).getById(anyLong());
         verify(itemRequestRepository, times(1)).getItemRequestsByRequestorId(anyLong(), any());
         verify(itemRequestMapper, times(1)).toItemReqDto(any());
-        verify(itemRepository, times(1)).findItemsByRequestId(anyList());
+        verify(itemRepository, times(1)).findItemsByRequestId(anySet());
         verify(itemMapper, times(1)).toItemForRequestDto(any());
         assertEquals(actualItemRequests.get(0).getId(), itemRequest1.getId());
     }
@@ -182,7 +181,7 @@ class ItemRequestServiceImplTest {
         when(itemRequestRepository.getItemRequestsByRequestorId(anyLong(), any()))
                 .thenReturn(pageItemRequests);
         when(itemRequestMapper.toItemReqDto(any())).thenReturn(itemReqResponseDto);
-        when(itemRepository.findItemsByRequestId(anyList())).thenReturn(List.of(item1));
+        when(itemRepository.findItemsByRequestId(anySet())).thenReturn(List.of(item1));
         when(itemMapper.toItemForRequestDto(any())).thenReturn(itemForRequestResponseDto);
 
         List<ItemReqResponseDto> actualItemRequests = itemRequestService.getItemRequests(notRequestorId, 0, 10);
@@ -190,7 +189,7 @@ class ItemRequestServiceImplTest {
         verify(userService, times(1)).getById(anyLong());
         verify(itemRequestRepository, times(1)).getItemRequestsByRequestorId(anyLong(), any());
         verify(itemRequestMapper, times(1)).toItemReqDto(any());
-        verify(itemRepository, times(1)).findItemsByRequestId(anyList());
+        verify(itemRepository, times(1)).findItemsByRequestId(anySet());
         verify(itemMapper, times(1)).toItemForRequestDto(any());
         assertEquals(actualItemRequests.get(0).getId(), itemRequest1.getId());
     }

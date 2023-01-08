@@ -20,8 +20,9 @@ import ru.practicum.shareit.request.service.ItemRequestService;
 import ru.practicum.shareit.user.service.UserService;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 import static ru.practicum.shareit.global.utility.PageableConverter.getPageable;
@@ -29,6 +30,7 @@ import static ru.practicum.shareit.global.utility.PageableConverter.getPageable;
 @Service
 @Slf4j
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 public class ItemRequestServiceImpl implements ItemRequestService {
     private final ItemRequestRepository itemRequestRepository;
     private final ItemRepository itemRepository;
@@ -37,7 +39,6 @@ public class ItemRequestServiceImpl implements ItemRequestService {
     private final UserService userService;
 
     @Override
-    @Transactional(readOnly = true)
     public List<ItemReqResponseDto> getItemRequests(Long userId, Integer from, Integer size) {
         log.info("request to get all user item requests with id = {}.", userId);
         userService.getById(userId);
@@ -45,29 +46,27 @@ public class ItemRequestServiceImpl implements ItemRequestService {
                         getPageable(from, size, Sort.Direction.DESC, "created")).stream()
                 .map(itemRequestMapper::toItemReqDto)
                 .collect(Collectors.toList());
-        getItems(itemReqDtoList);
+        setItems(itemReqDtoList);
         return itemReqDtoList;
     }
 
     @Override
-    @Transactional(readOnly = true)
     public ItemReqResponseDto getById(Long requestId, Long userId) {
         log.info("request to get a item request with id = {}.", requestId);
         userService.getById(userId);
         ItemReqResponseDto itemReqDto = itemRequestMapper.toItemReqDto(itemRequestRepository.getReferenceById(requestId));
-        getItem(itemReqDto);
+        setItem(itemReqDto);
         return itemReqDto;
     }
 
     @Override
-    @Transactional(readOnly = true)
     public List<ItemReqResponseDto> getAllByOtherRequestors(Long userId, Integer from, Integer size) {
         log.info("request to get all item requests with other users.");
         List<ItemReqResponseDto> itemReqDtoList = itemRequestRepository.findAllByOtherUsers(userId,
                         getPageable(from, size, Sort.Direction.DESC, "created")).stream()
                 .map(itemRequestMapper::toItemReqDto)
                 .collect(Collectors.toList());
-        getItems(itemReqDtoList);
+        setItems(itemReqDtoList);
         return itemReqDtoList;
     }
 
@@ -85,26 +84,20 @@ public class ItemRequestServiceImpl implements ItemRequestService {
         return itemRequestMapper.toItemReqDto(savedItemRequest);
     }
 
-    private void getItem(ItemReqResponseDto itemReqDto) {
+    private void setItem(ItemReqResponseDto itemReqDto) {
         List<ItemForRequestResponseDto> items = itemRepository.getItemsByRequestId(itemReqDto.getId()).stream()
                 .map(itemMapper::toItemForRequestDto)
                 .collect(Collectors.toList());
         itemReqDto.setItems(items);
     }
 
-    private void getItems(List<ItemReqResponseDto> itemReqDtoList) {
-        List<Long> itemReqIds = itemReqDtoList.stream()
-                .map(ItemReqResponseDto::getId)
-                .collect(Collectors.toList());
-        List<Item> items = itemRepository.findItemsByRequestId(itemReqIds);
-        itemReqDtoList.forEach(itemReqDto -> {
-            List<ItemForRequestResponseDto> itemsDto = new ArrayList<>();
-            items.forEach(item -> {
-                if (item.getRequest().getId().equals(itemReqDto.getId())) {
-                    itemsDto.add(itemMapper.toItemForRequestDto(item));
-                }
-            });
-            itemReqDto.setItems(itemsDto);
-        });
+    private void setItems(List<ItemReqResponseDto> itemReqDtoList) {
+
+        Map<Long, List<ItemForRequestResponseDto>> itemReqDtoMap = new HashMap<>();
+        for (ItemReqResponseDto itemReqResponseDto : itemReqDtoList) {
+            itemReqDtoMap.put(itemReqResponseDto.getId(), itemReqResponseDto.getItems());
+        }
+        List<Item> items = itemRepository.findItemsByRequestId(itemReqDtoMap.keySet());
+        items.forEach(item -> itemReqDtoMap.get(item.getRequest().getId()).add(itemMapper.toItemForRequestDto(item)));
     }
 }

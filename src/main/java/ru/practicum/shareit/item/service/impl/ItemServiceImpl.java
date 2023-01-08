@@ -31,6 +31,7 @@ import static ru.practicum.shareit.global.utility.PageableConverter.getPageable;
 @Service
 @Slf4j
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 public class ItemServiceImpl implements ItemService {
     private final ItemRepository itemRepository;
     private final CommentRepository commentRepository;
@@ -40,7 +41,6 @@ public class ItemServiceImpl implements ItemService {
     private final CommentMapper commentMapper;
 
     @Override
-    @Transactional(readOnly = true)
     public List<ItemResponseDto> getItems(Long userId, Integer from, Integer size) {
         log.info("request to get all user items with id = {}.", userId);
         List<ItemResponseDto> itemsDto = itemRepository.getItemsByOwnerId(userId,
@@ -50,25 +50,23 @@ public class ItemServiceImpl implements ItemService {
         List<Long> itemIds = itemsDto.stream()
                 .map(ItemResponseDto::getId)
                 .collect(Collectors.toList());
-        getBookingsList(itemsDto, itemIds);
-        getCommentsList(itemsDto, itemIds);
+        setBookingsList(itemsDto, itemIds);
+        setCommentsList(itemsDto, itemIds);
         return itemsDto;
     }
 
     @Override
-    @Transactional(readOnly = true)
     public ItemResponseDto getById(Long itemId, Long userId) {
         log.info("request to get a item with id = {}.", itemId);
         ItemResponseDto itemDto = itemMapper.toItemDto(itemRepository.getReferenceById(itemId));
         if (itemDto.getOwner().getId().equals(userId)) {
-            getBookings(itemDto);
+            setBookings(itemDto);
         }
-        getComments(itemDto);
+        setComments(itemDto);
         return itemDto;
     }
 
     @Override
-    @Transactional(readOnly = true)
     public List<ItemResponseDto> getByText(String text, Integer from, Integer size) {
         log.info("items search request by text = {}.", text);
         if (text.isEmpty()) {
@@ -81,8 +79,8 @@ public class ItemServiceImpl implements ItemService {
         List<Long> itemIds = itemsDto.stream()
                 .map(ItemResponseDto::getId)
                 .collect(Collectors.toList());
-        getBookingsList(itemsDto, itemIds);
-        getCommentsList(itemsDto, itemIds);
+        setBookingsList(itemsDto, itemIds);
+        setCommentsList(itemsDto, itemIds);
         return itemsDto;
     }
 
@@ -117,8 +115,8 @@ public class ItemServiceImpl implements ItemService {
             dbItem.setAvailable(itemDto.getAvailable());
         }
         ItemResponseDto changedItem = itemMapper.toItemDto(itemRepository.save(dbItem));
-        getBookings(changedItem);
-        getComments(changedItem);
+        setBookings(changedItem);
+        setComments(changedItem);
         log.info("item with id = {} is changed {}.", changedItem.getId(), changedItem);
         return changedItem;
     }
@@ -148,7 +146,7 @@ public class ItemServiceImpl implements ItemService {
         return commentMapper.toCommentDto(savedComment);
     }
 
-    private void getBookings(ItemResponseDto itemDto) {
+    private void setBookings(ItemResponseDto itemDto) {
         LocalDateTime time = LocalDateTime.now();
         List<Booking> bookings = bookingRepository.findLastAndNextById(itemDto.getId(), time);
         bookings.forEach(booking -> {
@@ -161,7 +159,7 @@ public class ItemServiceImpl implements ItemService {
                 });
     }
 
-    private void getBookingsList(List<ItemResponseDto> itemDtoList, List<Long> itemIds) {
+    private void setBookingsList(List<ItemResponseDto> itemDtoList, List<Long> itemIds) {
         LocalDateTime time = LocalDateTime.now();
         List<Booking> bookings = bookingRepository.findLastAndNextByIdList(itemIds, time);
         itemDtoList.forEach(itemDto -> bookings.forEach(booking -> {
@@ -174,14 +172,14 @@ public class ItemServiceImpl implements ItemService {
         }));
     }
 
-    private void getComments(ItemResponseDto itemDto) {
+    private void setComments(ItemResponseDto itemDto) {
         List<CommentResponseDto> comments = commentRepository.findCommentsByItemId(itemDto.getId()).stream()
                 .map(commentMapper::toCommentDto)
                 .collect(Collectors.toList());
         itemDto.setComments(comments);
     }
 
-    private void getCommentsList(List<ItemResponseDto> itemDtoList, List<Long> itemIds) {
+    private void setCommentsList(List<ItemResponseDto> itemDtoList, List<Long> itemIds) {
         List<Comment> comments = commentRepository.findCommentsByItemIds(itemIds);
         itemDtoList.forEach(itemDto -> {
                     List<CommentResponseDto> commentsDto = new ArrayList<>();

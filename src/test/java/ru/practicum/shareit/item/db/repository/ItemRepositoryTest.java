@@ -10,6 +10,7 @@ import org.springframework.data.domain.Sort;
 import ru.practicum.shareit.item.db.model.Item;
 
 import java.util.List;
+import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -48,7 +49,7 @@ class ItemRepositoryTest {
 
     @Test
     void findItemsByRequestId_whenRequestFound_thenReturnedItems() {
-        List<Long> requestIds = List.of(requestId, 2L);
+        Set<Long> requestIds = Set.of(requestId, 2L);
 
         List<Item> items = itemRepository.findItemsByRequestId(requestIds);
         assertEquals(1, items.size());
