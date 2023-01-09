@@ -2,6 +2,8 @@ package ru.practicum.shareit.booking.service.impl;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Isolation;
@@ -18,23 +20,23 @@ import ru.practicum.shareit.user.service.UserService;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.Collectors;
+
+import static ru.practicum.shareit.global.utility.PageableConverter.getPageable;
 
 @Service
 @Slf4j
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 public class BookingServiceImpl implements BookingService {
     private final BookingRepository bookingRepository;
     private final UserService userService;
     private final BookingMapper bookingMapper;
 
     @Override
-    @Transactional(readOnly = true)
     public BookingResponseDto getById(Long userId, Long bookingId) {
         log.info("request to get a booking with id = {}.", bookingId);
-        Booking booking = Optional.of(bookingRepository.getReferenceById(bookingId))
-                .orElseThrow(() -> new NotFoundException(String.format("booking with id = %d not found.", bookingId)));
+        Booking booking = bookingRepository.getReferenceById(bookingId);
         if ((!booking.getItem().getOwner().getId().equals(userId)) && (!booking.getBooker().getId().equals(userId))) {
             throw new NotItemOwnerException(String.format("user with id = %d does not own booking with id = %d.",
                     userId, booking.getId()));
@@ -43,31 +45,30 @@ public class BookingServiceImpl implements BookingService {
     }
 
     @Override
-    @Transactional(readOnly = true)
-    public List<BookingResponseDto> getAllByState(Long userId, String state) {
+    public List<BookingResponseDto> getAllByState(Long userId, String state, Integer from, Integer size) {
         log.info("request to get all bookings by state = {}.", state);
         userService.getById(userId);
         LocalDateTime time = LocalDateTime.now();
-        List<Booking> bookings;
-        Sort sort = Sort.by(Sort.Order.desc("start"));
+        Page<Booking> bookings;
+        Pageable pageable = getPageable(from, size, Sort.Direction.DESC, "start");
         switch (state) {
             case "ALL":
-                bookings = bookingRepository.findAllByBookerId(userId, Sort.by(Sort.Order.desc("start")));
+                bookings = bookingRepository.findAllByBookerId(userId, pageable);
                 break;
             case "CURRENT":
-                bookings = bookingRepository.findCurrent(userId, time);
+                bookings = bookingRepository.findCurrent(userId, time, pageable);
                 break;
             case "PAST":
-                bookings = bookingRepository.findBookingsByBookerIdAndEndIsBefore(userId, time, sort);
+                bookings = bookingRepository.findBookingsByBookerIdAndEndIsBefore(userId, time, pageable);
                 break;
             case "FUTURE":
-                bookings = bookingRepository.findBookingsByBookerIdAndStartAfter(userId, time, sort);
+                bookings = bookingRepository.findBookingsByBookerIdAndStartAfter(userId, time, pageable);
                 break;
             case "REJECTED":
-                bookings = bookingRepository.findBookingsByBookerIdAndStatus(userId, BookingStatus.REJECTED, sort);
+                bookings = bookingRepository.findBookingsByBookerIdAndStatus(userId, BookingStatus.REJECTED, pageable);
                 break;
             case "WAITING":
-                bookings = bookingRepository.findBookingsByBookerIdAndStatus(userId, BookingStatus.WAITING, sort);
+                bookings = bookingRepository.findBookingsByBookerIdAndStatus(userId, BookingStatus.WAITING, pageable);
                 break;
             default:
                 throw new BadStateException(String.format("Unknown state: %s", state));
@@ -78,30 +79,30 @@ public class BookingServiceImpl implements BookingService {
     }
 
     @Override
-    @Transactional(readOnly = true)
-    public List<BookingResponseDto> getAllByOwner(Long userId, String state) {
+    public List<BookingResponseDto> getAllByOwner(Long userId, String state, Integer from, Integer size) {
         log.info("request to receive all bookings by state = {} from item owner = {}.", state, userId);
         userService.getById(userId);
         LocalDateTime time = LocalDateTime.now();
-        List<Booking> bookings;
+        Page<Booking> bookings;
+        Pageable pageable = getPageable(from, size, Sort.Direction.DESC, "start");
         switch (state) {
             case "ALL":
-                bookings = bookingRepository.findByOwnerId(userId);
+                bookings = bookingRepository.findByOwnerId(userId, pageable);
                 break;
             case "CURRENT":
-                bookings = bookingRepository.findCurrentByOwnerId(userId, time);
+                bookings = bookingRepository.findCurrentByOwnerId(userId, time, pageable);
                 break;
             case "PAST":
-                bookings = bookingRepository.findPastByOwnerId(userId, time);
+                bookings = bookingRepository.findPastByOwnerId(userId, time, pageable);
                 break;
             case "FUTURE":
-                bookings = bookingRepository.findFutureByOwnerId(userId, time);
+                bookings = bookingRepository.findFutureByOwnerId(userId, time, pageable);
                 break;
             case "REJECTED":
-                bookings = bookingRepository.findByOwnerIdAndByStatus(userId, BookingStatus.REJECTED);
+                bookings = bookingRepository.findByOwnerIdAndByStatus(userId, BookingStatus.REJECTED, pageable);
                 break;
             case "WAITING":
-                bookings = bookingRepository.findByOwnerIdAndByStatus(userId, BookingStatus.WAITING);
+                bookings = bookingRepository.findByOwnerIdAndByStatus(userId, BookingStatus.WAITING, pageable);
                 break;
             default:
                 throw new BadStateException(String.format("Unknown state: %s", state));
@@ -130,13 +131,13 @@ public class BookingServiceImpl implements BookingService {
             throw new NotItemAvailableException(String.format("item with id = %d is not available for booking.",
                     booking.getItem().getId()));
         }
-        if (!bookingRepository.findFreeInterval(booking.getItem().getId(), booking.getStart(), booking.getEnd())
-                .isEmpty()) {
-            throw new NotItemAvailableException("item cannot be booked for these dates.");
-        }
         if (booking.getItem().getOwner().getId().equals(booking.getBooker().getId())) {
             throw new NotItemOwnerException(String.format("user with id = %d cannot book their item.",
                     booking.getBooker().getId()));
+        }
+        if (!bookingRepository.findFreeInterval(booking.getItem().getId(), booking.getStart(), booking.getEnd())
+                .isEmpty()) {
+            throw new NotItemAvailableException("item cannot be booked for these dates.");
         }
         booking.setStatus(BookingStatus.WAITING);
         Booking savedBooking = bookingRepository.save(booking);

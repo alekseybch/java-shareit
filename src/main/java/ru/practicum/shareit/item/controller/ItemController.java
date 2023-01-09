@@ -18,8 +18,12 @@ public class ItemController {
     private final ItemService itemService;
 
     @GetMapping
-    public List<ItemResponseDto> getItems(@RequestHeader("X-Sharer-User-Id") Long userId) {
-        return itemService.getItems(userId);
+    public List<ItemResponseDto> findItems(@RequestHeader("X-Sharer-User-Id") Long userId,
+                                           @RequestParam(value = "from", required = false,
+                                                  defaultValue = "0") Integer from,
+                                           @RequestParam(value = "size", required = false,
+                                                  defaultValue = "20") Integer size) {
+        return itemService.getItems(userId, from, size);
     }
 
     @GetMapping(value = "/{itemId}")
@@ -29,8 +33,12 @@ public class ItemController {
     }
 
     @GetMapping(value = "/search")
-    public List<ItemResponseDto> findItemByText(@RequestParam("text") String text) {
-        return itemService.getByText(text);
+    public List<ItemResponseDto> findItemByText(@RequestParam("text") String text,
+                                                @RequestParam(value = "from", required = false,
+                                                        defaultValue = "0") Integer from,
+                                                @RequestParam(value = "size", required = false,
+                                                        defaultValue = "20") Integer size) {
+        return itemService.getByText(text, from, size);
     }
 
     @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
